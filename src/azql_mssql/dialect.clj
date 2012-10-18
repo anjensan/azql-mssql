@@ -20,13 +20,13 @@
   NONE)
 
 (defn render-select-body
-  [relation render-orderby?]
+  [relation subselect]
   [SELECT
    (render-modifier relation)
-   (render-fields relation)
+   (if subselect ASTERISK (render-fields relation))
    (render-from relation)
    (render-where relation)
-   (if render-orderby? (render-order relation) NONE)
+   (if subselect NONE (render-order relation))
    (render-group relation)
    (renger-having relation)])
 
@@ -35,12 +35,14 @@
   (if (or offset limit)
     (let [start (or offset 1)
           end (+ -1 start (or limit (max-limit-value)))]
-      [(raw "SELECT * FROM (SELECT *, row_number() OVER (")
+      [SELECT
+       (render-fields relation)
+       (raw "FROM (SELECT *, row_number() OVER (")
        (if (:order relation)
          (render-order relation)
          (raw "ORDER BY CURRENT_TIMESTAMP"))
        (raw ") AS _azql_rownum FROM (")
-       (render-select-body relation false)
+       (render-select-body relation true)
        (raw ") AS _azql_query ) AS _azql_numberedqeery")
        WHERE :_azql_numberedqeery._azql_rownum BETWEEN start AND end])
-    (render-select-body relation true)))
+    (render-select-body relation false)))
