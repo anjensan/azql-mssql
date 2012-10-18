@@ -11,10 +11,9 @@
   [_]
   ::mssql)
 
-(defmethod naming-strategy ::mssql
+(defmethod entity-naming-strategy ::mssql
   []
-  {:entity (fn [x] (str \[ x \]))
-   :keyword s/lower-case})
+  (fn [x] (str \[ x \])))
 
 (defmethod render-limit ::mssql
   [_]
